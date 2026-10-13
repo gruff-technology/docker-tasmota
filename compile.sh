@@ -73,6 +73,12 @@ if test -d "`pwd`/Tasmota"; then
             cp user_config_override.h Tasmota/tasmota/user_config_override.h
             echo -e "Using your user_config_override.h and overwriting the existing file\n"
         fi
+        ## Copy the local CA trust anchor headers (INCLUDE_LOCAL_CERT)
+        CA_DIR=${CA_DIR:="$rundir/../gruff-automation-ca"}
+        if test -e "$CA_DIR/local_ca_data.h" && test -e "$CA_DIR/local_ca_descriptor.h"; then
+            cp "$CA_DIR/local_ca_data.h" "$CA_DIR/local_ca_descriptor.h" Tasmota/tasmota/include/
+            echo -e "Using local CA headers from $CA_DIR\n"
+        fi
         ## Run container with provided arguments
         echo -n "Compiling..."
         test -t 1 && DOCKER_TTY="-it"
