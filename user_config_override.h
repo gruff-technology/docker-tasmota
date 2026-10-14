@@ -4,13 +4,18 @@
   Target: Shelly 1PM Gen4 (ESP32-C6, BL0942), build env `tasmota32c6`.
   Build:  ./compile.sh tasmota32c6
 
-  Everything a relay needs to reach the gruff-hospitality-api broker is baked
-  in, so a freshly flashed device joins Wi-Fi and connects without any console
-  work. Devices identify themselves by MAC (Topic %012X), which the API uses
-  to auto-register them as unassigned.
+  Relays connect to the live broker, hospitality.grufftechnology.ee:8883.
+  Devices identify themselves by MAC (Topic %012X), which the API uses to
+  auto-register them as unassigned.
 
-  The CA trust anchor comes from gruff-automation-ca (local_ca_data.h and
-  local_ca_descriptor.h); compile.sh copies both into Tasmota/tasmota/include.
+  The broker requires a client certificate whose CN is the device's topic
+  (use_identity_as_username + ACL patterns on %u), so each relay needs
+  `TLSKey1`/`TLSKey2` from gruff-automation-ca/generate-client-cert.sh <MAC>
+  before it can connect.
+
+  The broker's own cert is Let's Encrypt (ISRG Root X1, built in). The Gruff
+  CA trust anchor (local_ca_data.h, local_ca_descriptor.h, copied in by
+  compile.sh) is also included, for the local dev broker.
 */
 
 #ifndef _USER_CONFIG_OVERRIDE_H_
@@ -19,7 +24,7 @@
 // Bump to force these settings over whatever is already in a device's flash
 // (otherwise they only apply on first boot or after `Reset 1`).
 #undef  CFG_HOLDER
-#define CFG_HOLDER             4701
+#define CFG_HOLDER             4702
 
 /*********************************************************************************************\
  * Device template - Shelly 1PM Gen4
@@ -51,11 +56,11 @@
 #define STA_PASS1              "tulipunane vihmavari"
 
 /*********************************************************************************************\
- * MQTT over TLS, server validated against the Gruff Tasmota EC CA
+ * MQTT over TLS (mutual: client certificate via TLSKey1/TLSKey2)
 \*********************************************************************************************/
 
 #undef  MQTT_HOST
-#define MQTT_HOST              "192.168.1.132"
+#define MQTT_HOST              "hospitality.grufftechnology.ee"
 #undef  MQTT_PORT
 #define MQTT_PORT              8883
 
@@ -71,8 +76,7 @@
 #ifndef USE_MQTT_TLS
 #define USE_MQTT_TLS
 #endif
-// Lets devices be given a per-device client certificate later with
-// TLSKey1/TLSKey2 (see gruff-automation-ca/generate-client-cert.sh).
+// Per-device client certificate, set with TLSKey1/TLSKey2.
 #ifndef USE_MQTT_CLIENT_CERT
 #define USE_MQTT_CLIENT_CERT
 #endif
@@ -81,8 +85,8 @@
 
 #undef  MQTT_TLS_ENABLED
 #define MQTT_TLS_ENABLED       true
-// The CA and broker certs are EC (prime256v1); without this the first
-// handshake fails with error 296 before Tasmota turns ECDSA on by itself.
+// Client certs (and the local dev broker's) are EC (prime256v1); without this
+// the first handshake can fail with error 296 before Tasmota enables it itself.
 #undef  MQTT_TLS_ECDSA
 #define MQTT_TLS_ECDSA         true
 

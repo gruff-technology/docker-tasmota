@@ -79,6 +79,11 @@ if test -d "`pwd`/Tasmota"; then
             cp "$CA_DIR/local_ca_data.h" "$CA_DIR/local_ca_descriptor.h" Tasmota/tasmota/include/
             echo -e "Using local CA headers from $CA_DIR\n"
         fi
+        ## Drop earlier outputs so a failed build can't pass for a finished one
+        for build in "$@"
+        do
+            rm -f "$rundir"/Tasmota/build_output/firmware/"$build".* "$rundir"/"$build".*
+        done
         ## Run container with provided arguments
         echo -n "Compiling..."
         test -t 1 && DOCKER_TTY="-it"
