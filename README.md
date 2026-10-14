@@ -1,6 +1,31 @@
 # Docker-Tasmota
 Quickly set up a build environment for [Tasmota](https://github.com/arendst/Tasmota) using Docker
 
+## Gruff Hospitality relays
+
+This copy builds the firmware for Gruff Hospitality's relays (Shelly 1PM
+Gen4). Everything Gruff-specific is in `user_config_override.h`, which
+explains each setting.
+
+1. Copy `user_config_secrets.example.h` to `user_config_secrets.h` and fill
+   in the Wi-Fi and the web UI password (kept in Bitwarden). It's gitignored,
+   and `compile.sh` won't build without it.
+2. `./compile.sh tasmota32c6`. It also copies in the Gruff CA trust anchor
+   from `../gruff-automation-ca`. The firmware is `tasmota32c6.bin`
+   (`tasmota32c6.factory.bin` for a first flash over serial).
+3. Give each relay its client certificate:
+   `../gruff-automation-ca/generate-client-cert.sh <MAC>` prints the
+   `TLSKey1`/`TLSKey2` commands for its console.
+4. After flashing over an earlier Gruff build, send `Reset 1`: the defaults
+   only apply on first boot and after a reset.
+
+The relays connect to `hospitality.grufftechnology.ee:8883` with mutual
+TLS, as the topic `%012X` (their MAC). With no broker for 30 minutes, or
+after a power cut, they switch on and leave the room to its thermostat.
+The web UI's user is `admin`.
+
+Note that `compile.sh` pulls the latest Tasmota development branch first.
+
 ## compile.sh
 This bash script makes compiling a lot easier without the need to type lengthy commands each time.
 

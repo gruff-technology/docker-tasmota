@@ -2,7 +2,8 @@
   user_config_override.h - Gruff Hospitality relay firmware
 
   Target: Shelly 1PM Gen4 (ESP32-C6, BL0942), build env `tasmota32c6`.
-  Build:  ./compile.sh tasmota32c6
+  Build:  ./compile.sh tasmota32c6, with user_config_secrets.h (Wi-Fi and
+          the web UI password) next to this file. See README.md.
 
   Relays connect to the live broker, hospitality.grufftechnology.ee:8883.
   Devices identify themselves by MAC (Topic %012X), which the API uses to
