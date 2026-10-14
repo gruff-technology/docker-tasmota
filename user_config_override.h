@@ -21,8 +21,9 @@
 #ifndef _USER_CONFIG_OVERRIDE_H_
 #define _USER_CONFIG_OVERRIDE_H_
 
-// Bump to force these settings over whatever is already in a device's flash
-// (otherwise they only apply on first boot or after `Reset 1`).
+// These settings apply on first boot and after `Reset 1`. Bumping this does
+// NOT reliably re-apply them over an earlier build: on ESP32 a changed
+// CFG_HOLDER restores the last-known-good settings file first. Send `Reset 1`.
 #undef  CFG_HOLDER
 #define CFG_HOLDER             4702
 
