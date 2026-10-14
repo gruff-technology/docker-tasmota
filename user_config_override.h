@@ -48,13 +48,11 @@
 #define FRIENDLY_NAME          "Gruff Relay"
 
 /*********************************************************************************************\
- * Wi-Fi
+ * Wi-Fi and web UI credentials: user_config_secrets.h, kept out of git and
+ * copied in by compile.sh (template: user_config_secrets.example.h).
 \*********************************************************************************************/
 
-#undef  STA_SSID1
-#define STA_SSID1              "U"
-#undef  STA_PASS1
-#define STA_PASS1              "tulipunane vihmavari"
+#include "user_config_secrets.h"
 
 /*********************************************************************************************\
  * MQTT over TLS (mutual: client certificate via TLSKey1/TLSKey2)
@@ -109,11 +107,38 @@
 #define TIMERS_ENABLED         true
 
 /*********************************************************************************************\
- * First-boot commands
+ * Fail-safe heating
+ *
+ * The API decides when a relay is on. If the relay can't reach it, the room
+ * mustn't stay cold until it can: after 30 minutes without MQTT the relay
+ * switches on and the room's thermostat regulates the floor alone, as without
+ * Gruff. Once it reconnects, the API's next command corrects it.
+ *
+ * Mqtt#Disconnected fires on every failed reconnect attempt (about every two
+ * minutes), which would keep restarting a plain timer, so Var1 counts them
+ * and only the first starts the timer. Mqtt#Connected resets both. A relay
+ * that boots without a connection also gets its first Mqtt#Disconnected.
+ *
+ * After a power cut the relay starts on too (PowerOnState 1), for the same
+ * reason.
 \*********************************************************************************************/
 
-// NTC: 10k pull-down, 10k at 25 C, B 3350 (same as the Shelly Plus 1PM)
+#undef  APP_POWERON_STATE
+#define APP_POWERON_STATE      POWER_ALL_ON
+
+#define FAILSAFE_RULE \
+  "ON Mqtt#Disconnected DO Add1 1 ENDON " \
+  "ON Var1#State==1 DO RuleTimer1 1800 ENDON " \
+  "ON Rules#Timer=1 DO Power1 1 ENDON " \
+  "ON Mqtt#Connected DO Var1 0 ENDON " \
+  "ON Mqtt#Connected DO RuleTimer1 0 ENDON"
+
+/*********************************************************************************************\
+ * First-boot commands (and after `Reset 1`), run as one Backlog: no `;`
+ * inside a command.
+\*********************************************************************************************/
+
 #undef  USER_BACKLOG
-#define USER_BACKLOG           "AdcParam1 2,10000,10000,3350"
+#define USER_BACKLOG           "AdcParam1 2,10000,10000,3350;Rule1 " FAILSAFE_RULE ";Rule1 1"
 
 #endif  // _USER_CONFIG_OVERRIDE_H_

@@ -73,6 +73,12 @@ if test -d "`pwd`/Tasmota"; then
             cp user_config_override.h Tasmota/tasmota/user_config_override.h
             echo -e "Using your user_config_override.h and overwriting the existing file\n"
         fi
+        ## Credentials the override includes; kept out of git
+        if ! test -e "user_config_secrets.h"; then
+            echo -e "\e[31mMissing user_config_secrets.h: copy user_config_secrets.example.h and fill it in.\e[0m"
+            exit 1
+        fi
+        cp user_config_secrets.h Tasmota/tasmota/user_config_secrets.h
         ## Copy the local CA trust anchor headers (INCLUDE_LOCAL_CERT)
         CA_DIR=${CA_DIR:="$rundir/../gruff-automation-ca"}
         if test -e "$CA_DIR/local_ca_data.h" && test -e "$CA_DIR/local_ca_descriptor.h"; then

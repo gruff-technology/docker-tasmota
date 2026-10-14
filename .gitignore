@@ -1,3 +1,4 @@
 Tasmota/
 *.log
 *.bin
+user_config_secrets.h
