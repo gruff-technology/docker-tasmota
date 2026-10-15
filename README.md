@@ -26,6 +26,18 @@ The web UI's user is `admin`.
 
 Note that `compile.sh` pulls the latest Tasmota development branch first.
 
+This repo is a fork of `tasmota/docker-tasmota`, kept as the `upstream`
+remote. To take in upstream changes:
+
+```
+git fetch upstream
+git merge upstream/master
+git push
+```
+
+If you've cloned the fork fresh, add the remote first:
+`git remote add upstream https://github.com/tasmota/docker-tasmota.git`.
+
 ## compile.sh
 This bash script makes compiling a lot easier without the need to type lengthy commands each time.
 
