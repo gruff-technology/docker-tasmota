@@ -15,6 +15,10 @@
 #undef  STA_PASS2
 #define STA_PASS2              "<setup wifi password>"
 
+// The shared login for the broker's enrollment port (Ansible vault: its hash).
+#undef  MQTT_PASS
+#define MQTT_PASS              "<24 random letters and digits>"
+
 // The relay's web UI and console: user admin. Letters and digits only, so it
 // also works in Backlog commands.
 #undef  WEB_PASSWORD

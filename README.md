@@ -17,13 +17,17 @@ Gruff-specific is in `user_config_override.h`, which explains each setting.
 2. `./compile.sh <build>`. It also copies in the Gruff CA trust anchor
    from `../gruff-automation-ca`. The firmware is `<build>.bin`
    (`<build>.factory.bin` for a first flash over serial).
-3. Give each relay its client certificate:
-   `../gruff-automation-ca/generate-client-cert.sh <MAC>` prints the
-   `TLSKey1`/`TLSKey2` commands for its console.
-4. After flashing over an earlier Gruff build, send `Reset 1`: the defaults
-   only apply on first boot and after a reset.
+3. Flash it and power the relay up. It joins the Wi-Fi and waits on the
+   broker's enrollment port, `8884`, where it can't do anything else.
+4. `../gruff-automation-ca/enroll-relays.sh` lists the waiting relays. Check
+   the MACs are yours, then `enroll-relays.sh <MAC>...` gives them their
+   certificate and moves them to `8883`. It works from anywhere, with no
+   access to the relay's network.
+5. After flashing over an earlier Gruff build, send `Reset 1`: the defaults
+   only apply on first boot and after a reset. It also puts the relay back on
+   `8884`, so enroll it again.
 
-The relays connect to `hospitality.grufftechnology.ee:8883` with mutual
+Enrolled relays connect to `hospitality.grufftechnology.ee:8883` with mutual
 TLS, as the topic `%012X` (their MAC). With no broker for 30 minutes, or
 after a power cut, they switch on and leave the room to its thermostat.
 The web UI's user is `admin`.

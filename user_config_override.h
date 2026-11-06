@@ -10,10 +10,12 @@
   Devices identify themselves by MAC (Topic %012X), which the API uses to
   auto-register them as unassigned.
 
-  The broker requires a client certificate whose CN is the device's topic
-  (use_identity_as_username + ACL patterns on %u), so each relay needs
-  `TLSKey1`/`TLSKey2` from gruff-automation-ca/generate-client-cert.sh <MAC>
-  before it can connect.
+  A new relay has no client certificate, so it starts on the enrollment port,
+  8884: TLS with the shared login (user enroll), and only the enroll/ topics.
+  gruff-automation-ca/enroll-relays.sh then gives it a certificate and moves
+  it to 8883 and the normal topics, where the broker requires that
+  certificate, with the device's topic as its CN (use_identity_as_username +
+  ACL patterns on %u). `Reset 1` puts it back on 8884, to be enrolled again.
 
   The broker's own cert is Let's Encrypt (ISRG Root X1, built in). The Gruff
   CA trust anchor (local_ca_data.h, local_ca_descriptor.h, copied in by
@@ -64,13 +66,18 @@
 #include "user_config_secrets.h"
 
 /*********************************************************************************************\
- * MQTT over TLS (mutual: client certificate via TLSKey1/TLSKey2)
+ * MQTT over TLS, on the enrollment port until enroll-relays.sh moves the relay
+ * to mutual TLS on 8883 (client certificate via TLSKey1/TLSKey2)
 \*********************************************************************************************/
 
 #undef  MQTT_HOST
 #define MQTT_HOST              "hospitality.grufftechnology.ee"
 #undef  MQTT_PORT
-#define MQTT_PORT              8883
+#define MQTT_PORT              8884
+#undef  MQTT_USER
+#define MQTT_USER              "enroll"
+#undef  MQTT_FULLTOPIC
+#define MQTT_FULLTOPIC         "enroll/%prefix%/%topic%/"
 
 // Topic and client id are the full MAC, e.g. tele/A0B765F1C001/STATE
 #undef  MQTT_TOPIC
