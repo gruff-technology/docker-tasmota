@@ -5,15 +5,15 @@
 */
 
 #undef  STA_SSID1
-#define STA_SSID1              "<wifi ssid>"
+#define STA_SSID1              "<on-site wifi ssid>"
 #undef  STA_PASS1
-#define STA_PASS1              "<wifi password>"
+#define STA_PASS1              "<on-site wifi password>"
 
-// On site, tried when the first network isn't available.
+// Fallback: the network relays are set up on (TLS keys).
 #undef  STA_SSID2
-#define STA_SSID2              "<on-site wifi ssid>"
+#define STA_SSID2              "<setup wifi ssid>"
 #undef  STA_PASS2
-#define STA_PASS2              "<on-site wifi password>"
+#define STA_PASS2              "<setup wifi password>"
 
 // The relay's web UI and console: user admin. Letters and digits only, so it
 // also works in Backlog commands.
