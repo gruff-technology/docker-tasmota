@@ -17,6 +17,10 @@ USE_STABLE=${USE_STABLE:="0"}
 
 USE_VOLUME=${USE_VOLUME:="`pwd`/Tasmota"}
 
+# Compile jobs at once. Two can run Docker out of memory, which kills the
+# compiler partway through. Raise it if Docker has memory to spare.
+PIO_JOBS=${PIO_JOBS:="1"}
+
 ## Check whether Tasmota/ exists and fetch newest Tasmota version from development branch
 if test -d "`pwd`/Tasmota"; then
     cd Tasmota
@@ -96,9 +100,9 @@ if test -d "`pwd`/Tasmota"; then
         if [ $# -ne 0 ]; then
             if [[ $@ == "tasmota"* ]]; then
                 if [ "${USE_TEE}" = "1" ]; then
-                    docker run ${DOCKER_TTY} --rm -v "${USE_VOLUME}":/tasmota -e HOST_UID=$UID -e HOST_GID=$GID $DOCKER_IMAGE $(printf ' -e %s' $@) 2>&1 | tee ${TEE_PARAMETER} docker-tasmota.log
+                    docker run ${DOCKER_TTY} --rm -v "${USE_VOLUME}":/tasmota -e HOST_UID=$UID -e HOST_GID=$GID $DOCKER_IMAGE $(printf ' -e %s' $@) -j $PIO_JOBS 2>&1 | tee ${TEE_PARAMETER} docker-tasmota.log
                 else
-                    docker run ${DOCKER_TTY} --rm -v "${USE_VOLUME}":/tasmota -e HOST_UID=$UID -e HOST_GID=$GID $DOCKER_IMAGE $(printf ' -e %s' $@) 2>&1 > docker-tasmota.log
+                    docker run ${DOCKER_TTY} --rm -v "${USE_VOLUME}":/tasmota -e HOST_UID=$UID -e HOST_GID=$GID $DOCKER_IMAGE $(printf ' -e %s' $@) -j $PIO_JOBS > docker-tasmota.log 2>&1
                 fi
                 echo -e "\\r${CHECK_MARK} Finished!  \tCompilation log in docker-tasmota.log\n"
             else
@@ -107,24 +111,27 @@ if test -d "`pwd`/Tasmota"; then
             fi
         else
             if [ "${USE_TEE}" = "1" ]; then
-                docker run ${DOCKER_TTY} --rm -v "${USE_VOLUME}":/tasmota -e HOST_UID=$UID -e HOST_GID=$GID $DOCKER_IMAGE 2>&1 | tee ${TEE_PARAMETER} docker-tasmota.log
+                docker run ${DOCKER_TTY} --rm -v "${USE_VOLUME}":/tasmota -e HOST_UID=$UID -e HOST_GID=$GID $DOCKER_IMAGE -j $PIO_JOBS 2>&1 | tee ${TEE_PARAMETER} docker-tasmota.log
             else
-                docker run ${DOCKER_TTY} --rm -v "${USE_VOLUME}":/tasmota -e HOST_UID=$UID -e HOST_GID=$GID $DOCKER_IMAGE 2>&1 > docker-tasmota.log
+                docker run ${DOCKER_TTY} --rm -v "${USE_VOLUME}":/tasmota -e HOST_UID=$UID -e HOST_GID=$GID $DOCKER_IMAGE -j $PIO_JOBS > docker-tasmota.log 2>&1
             fi
             echo -e "\\r${CHECK_MARK} Finished! \tCompilation log in docker-tasmota.log\n"
             echo -e "Find your builds in $rundir/Tasmota/build_output/firmware\n"
         fi
         ## After docker is completed copy firmware to script dir and rename to buildname
+        failed=0
         for build in "$@"
         do
-        cp "$rundir"/Tasmota/build_output/firmware/"$build"* "$rundir"/
+        cp "$rundir"/Tasmota/build_output/firmware/"$build"* "$rundir"/ 2>/dev/null
             if test -e "$build".bin; then
                 echo -e "Completed! Your firmware is in $rundir/$build.bin\n"
             else
                 echo -e "\e[31m\e[5mWARNING:\e[0m"
                 echo -e "Something went wrong while compiling $build. Check compilation log\n"
+                failed=1
             fi
         done
+        exit $failed
     else
         echo -e "\nNo Docker detected. Please install docker:\n\n\tcurl -fsSL https://get.docker.com -o get-docker.sh\n\tsh get-docker.sh\n"
         # fi
