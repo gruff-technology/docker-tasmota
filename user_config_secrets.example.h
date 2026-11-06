@@ -5,15 +5,9 @@
 */
 
 #undef  STA_SSID1
-#define STA_SSID1              "<on-site wifi ssid>"
+#define STA_SSID1              "<wifi ssid>"
 #undef  STA_PASS1
-#define STA_PASS1              "<on-site wifi password>"
-
-// Fallback: the network relays are set up on (TLS keys).
-#undef  STA_SSID2
-#define STA_SSID2              "<setup wifi ssid>"
-#undef  STA_PASS2
-#define STA_PASS2              "<setup wifi password>"
+#define STA_PASS1              "<wifi password>"
 
 // The shared login for the broker's enrollment port (Ansible vault: its hash).
 #undef  MQTT_PASS
