@@ -1,9 +1,10 @@
 /*
   user_config_override.h - Gruff Hospitality relay firmware
 
-  Target: Shelly 1PM Gen4 (ESP32-C6, BL0942), build env `tasmota32c6`.
-  Build:  ./compile.sh tasmota32c6, with user_config_secrets.h (Wi-Fi and
-          the web UI password) next to this file. See README.md.
+  Targets: Shelly 1PM Gen4 (ESP32-C6, BL0942), build env `tasmota32c6`
+           Shelly 1PM Gen3 (ESP32-C3, BL0942), build env `tasmota32c3`
+  Build:   ./compile.sh <env>, with user_config_secrets.h (Wi-Fi and the
+           web UI password) next to this file. See README.md.
 
   Relays connect to the live broker, hospitality.grufftechnology.ee:8883.
   Devices identify themselves by MAC (Topic %012X), which the API uses to
@@ -29,7 +30,10 @@
 #define CFG_HOLDER             4702
 
 /*********************************************************************************************\
- * Device template - Shelly 1PM Gen4
+ * Device template - Shelly 1PM Gen3 and Gen4
+ *
+ * Both use the same pins. Only the template length differs, as it has one
+ * entry per GPIO: 22 on the C3, 31 on the C6.
  *
  *   GPIO0  Led1_i        status LED (active low)
  *   GPIO1  Button1       PCB button (active low)
@@ -41,7 +45,11 @@
 \*********************************************************************************************/
 
 #undef  USER_TEMPLATE
+#ifdef ESP32C3
+#define USER_TEMPLATE "{\"NAME\":\"Shelly 1PM Gen3\",\"GPIO\":[320,32,0,4736,224,0,3200,8161,0,0,192,0,0,0,0,0,0,0,0,0,0,0],\"FLAG\":0,\"BASE\":1}"
+#else
 #define USER_TEMPLATE "{\"NAME\":\"Shelly 1PM Gen4\",\"GPIO\":[320,32,0,4736,224,0,3200,8161,0,0,192,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"FLAG\":0,\"BASE\":1}"
+#endif
 #undef  MODULE
 #define MODULE                 USER_MODULE
 

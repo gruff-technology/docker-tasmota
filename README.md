@@ -3,16 +3,20 @@ Quickly set up a build environment for [Tasmota](https://github.com/arendst/Tasm
 
 ## Gruff Hospitality relays
 
-This copy builds the firmware for Gruff Hospitality's relays (Shelly 1PM
-Gen4). Everything Gruff-specific is in `user_config_override.h`, which
-explains each setting.
+This copy builds the firmware for Gruff Hospitality's relays. Everything
+Gruff-specific is in `user_config_override.h`, which explains each setting.
+
+| Relay           | Chip     | Build         |
+| --------------- | -------- | ------------- |
+| Shelly 1PM Gen4 | ESP32-C6 | `tasmota32c6` |
+| Shelly 1PM Gen3 | ESP32-C3 | `tasmota32c3` |
 
 1. Copy `user_config_secrets.example.h` to `user_config_secrets.h` and fill
    in the Wi-Fi and the web UI password (kept in Bitwarden). It's gitignored,
    and `compile.sh` won't build without it.
-2. `./compile.sh tasmota32c6`. It also copies in the Gruff CA trust anchor
-   from `../gruff-automation-ca`. The firmware is `tasmota32c6.bin`
-   (`tasmota32c6.factory.bin` for a first flash over serial).
+2. `./compile.sh <build>`. It also copies in the Gruff CA trust anchor
+   from `../gruff-automation-ca`. The firmware is `<build>.bin`
+   (`<build>.factory.bin` for a first flash over serial).
 3. Give each relay its client certificate:
    `../gruff-automation-ca/generate-client-cert.sh <MAC>` prints the
    `TLSKey1`/`TLSKey2` commands for its console.
