@@ -12,8 +12,9 @@ Gruff-specific is in `user_config_override.h`, which explains each setting.
 | Shelly 1PM Gen3 | ESP32-C3 | `tasmota32c3` |
 
 1. Copy `user_config_secrets.example.h` to `user_config_secrets.h` and fill
-   in the Wi-Fi and the web UI password (kept in Bitwarden). It's gitignored,
-   and `compile.sh` won't build without it.
+   in the site's Wi-Fi, the broker's enrollment password and the web UI
+   password (the last two are in Bitwarden). It's gitignored, and
+   `compile.sh` won't build without it.
 2. `./compile.sh <build>`. It also copies in the Gruff CA trust anchor
    from `../gruff-automation-ca`. The firmware is `<build>.bin`
    (`<build>.factory.bin` for a first flash over serial).
@@ -32,7 +33,42 @@ TLS, as the topic `%012X` (their MAC). With no broker for 30 minutes, or
 after a power cut, they switch on and leave the room to its thermostat.
 The web UI's user is `admin`.
 
-Note that `compile.sh` pulls the latest Tasmota development branch first.
+The firmware knows one Wi-Fi network, the site's. To enroll relays before
+they reach the site, run a temporary network with the same name and password.
+A relay that can't join that network can only be recovered over serial, so
+check the name and password before flashing a batch.
+
+### Clock and NTP
+
+A relay needs a plausible clock to accept the broker's certificate, on `8884`
+and `8883` alike. Without one its log shows `MQT: TLS connection error: 54`
+(`BR_ERR_X509_EXPIRED`, which also covers "not yet valid") and it keeps
+retrying. `Status 7` shows what it thinks the time is.
+
+The TLS check uses the later of the NTP time and the time settings were last
+saved to flash:
+
+- **A freshly flashed relay** has no saved time, so it can't connect until NTP
+  answers. Tasmota retries about once a minute, and even with NTP working a
+  relay has taken about 10 minutes.
+- **An enrolled relay** that lost power starts from its saved time, and
+  connects without NTP while that time is within the broker certificate's
+  validity. Let's Encrypt's certificates last 90 days and renew about 30 days
+  before they expire, so a relay left unplugged across a renewal has a saved
+  time from before the new certificate, and needs NTP to connect.
+
+So every site's network has to allow outbound NTP (UDP 123). If it doesn't,
+use an NTP server it can reach: `NTP_SERVER1` in the firmware, or
+`NtpServer1 <address>` on a relay. To get one relay going by hand,
+`Time <unix time>` sets the clock and turns NTP off; `Time 0` turns it back on.
+
+### Building
+
+`compile.sh` pulls the latest Tasmota development branch first. It runs one
+compile job at a time, because two can run Docker out of memory, which kills
+the compiler. With more memory for Docker, `PIO_JOBS=2 ./compile.sh <build>`
+is faster. It exits with an error if a build fails, and the compiler's output
+is in `docker-tasmota.log`.
 
 This repo is a fork of `tasmota/docker-tasmota`, kept as the `upstream`
 remote. To take in upstream changes:
